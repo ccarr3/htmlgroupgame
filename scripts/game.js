@@ -10,9 +10,9 @@ var player = {image: image, x: 1, y: 1};
 var moveSpeed = 3;
 var random = 0;
 var decision = 0;
-var maxBullets = 10;
 var bullets =[];
-
+var bulletCooldown = 300;
+var dist = 9999999;
 player.x = canvas.width/2;
 player.y = canvas.height/2;
 
@@ -28,6 +28,8 @@ function game(){
     ctx.clearRect(0,0,canvas.width,canvas.height); 
 
     //Any changes to numbers
+    bulletCooldown = bulletCooldown + 1;
+
     if(w==true){
         player.y-=moveSpeed;
     }
@@ -43,53 +45,116 @@ function game(){
 
 
     //Any collision detection 
-
+    for (var i = 0; i < bullets.length; i++) {
+        dist = ((player.x - bullets[i].x) ** 2 + (player.y - bullets[i].y) ** 2) ** 0.5;
+        if(dist < 12.5 + bullets[i].radius){
+            clearInterval(timer);
+            bullets.splice(i, bullets.length);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "black";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "white";
+            ctx.font = "30px Arial";
+            ctx.fillText("Game Over", canvas.width/2 - 75, canvas.height/2);
+            player.x = 9999;
+            player.y = 9999;
+        }
+    }
     //draw the pictures
     ctx.drawImage(image, player.x, player.y, 25, 25);
-    starPosDecider();
-    spawnBullet();
+    if(bulletCooldown == 400){
+        bulletCooldown = 0;
+        spawnBullet();
+    }
+
+    for (var i = 0; i < bullets.length; i++) {
+        bullets[i].drawCircle();
+        bullets[i].x += bullets[i].moveX;
+        bullets[i].y += bullets[i].moveY;
+    }
 }
 
-function spawnBullet(){
-    ctx.beginPath();
-    ctx.fillStyle = "red";
-        if(decision = 1){
-            ctx.arc(0, Math.random()*canvas.height, 15, 0, 2 * Math.PI);
-        }
-        if(decision = 2){
-            ctx.arc(canvas.width, Math.random()*canvas.height, 15, 0, 2 * Math.PI);
-        }
-        if(decision = 3){
-            ctx.arc(Math.random()*canvas.width, canvas.height, 15, 0, 2 * Math.PI);
-        }
-        if(decision = 4){
-            ctx.arc(Math.random()*canvas.width, 0, 15, 0, 2 * Math.PI);
-        }
-    ctx.closePath();
-    ctx.fill();   
+//Create bullet object
+function createBullet() {
+    var bullet = {
+        x: 0,
+        y: 0,
+        radius: 1,
+        color: "red",
+        moveX: 0,
+        moveY: 0
+    }
+    return bullet;
 }
 
-function starPosDecider(){
-    var rand = Math.random();
-    console.log(decision, rand)
-    if(rand>=0 && rand<=0.25){
-        decision = 1
-        console.log("1")
-        return
+//create bullet object
+function createbullet() {
+    var bullet = {
+        x: 0,
+        y: 0,
+        radius: 0,
+        color: "black",
+        drawCircle: function () {
+            ctx.beginPath()
+            ctx.fillStyle = this.color;
+            ctx.arc(this.x, this.y, this.radius, 0, 2 * Math.PI);
+            ctx.fill();
+        },
     }
-    if(rand>0.25 && rand<=0.5){
-        decision = 2
-        console.log("2")
-        return
-    }
-    if(rand>0.5 && rand<=0.75){
-        decision = 3
-        console.log("3")
-        return
-    }
-    if(rand>0.75 && rand<=1){
-        decision = 4
-        console.log("4")
-        return
+    return bullet;
+}
+
+
+var bulletCount = 40;
+var bullets = [];
+
+//Creates an array
+for (var i = 0; i < bulletCount; i++) {
+    bullets[i] = createbullet();
+    bullets[i].x = 10000;//Math.random() * canvas.width;
+    bullets[i].y = 10000;//Math.random() * canvas.height;
+    bullets[i].drawCircle();
+    bullets[i].radius = 10;
+
+
+}
+
+//spawns bullets on the edges of the canvas
+function spawnBullet() {
+    for (var i = 0; i < bullets.length; i++) {
+        var bullet = bullets[i];
+        var rand = Math.random();
+        if (rand >= 0 && rand <= 0.25) {
+            bullet.x = 0;
+            bullet.y = Math.random() * canvas.height;
+            bullet.moveX = 2;
+            bullet.moveY = 0;
+        }
+        if (rand > 0.25 && rand <= 0.5) {
+            bullet.x = canvas.width;
+            bullet.y = Math.random() * canvas.height;
+            bullet.moveX = -2;
+            bullet.moveY = 0;
+        }
+        if (rand > 0.5 && rand <= 0.75) {
+            bullet.x = Math.random() * canvas.width;
+            bullet.y = canvas.height;
+            bullet.moveX = 0;
+            bullet.moveY = -2;
+        }
+        if (rand > 0.75 && rand <= 1) {
+            bullet.x = Math.random() * canvas.width;
+            bullet.y = 0;
+            bullet.moveX = 0;
+            bullet.moveY = 2;
+        }
+        bullet.drawCircle();
     }
 }
+
+
+
+
+
+
+
